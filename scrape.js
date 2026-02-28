@@ -4,29 +4,32 @@ const { chromium } = require("playwright");
   const browser = await chromium.launch();
   const page = await browser.newPage();
 
-  let totalSum = 0;
+  let total = 0;
 
   for (let seed = 17; seed <= 26; seed++) {
-    const url = `https://exam.sanand.workers.dev/tds-2026-01-ga3hq-cdp-runtime-diagnostics?seed=${seed}`;
-    
+    const url = `https://sanand0.github.io/tdsdata/js_table/?seed=${seed}`;
+
     console.log("Opening:", url);
 
-    await page.goto(url);
+    await page.goto(url, { waitUntil: "networkidle" });
 
-    await page.waitForSelector("table");
+    // get full page text
+    const text = await page.evaluate(() => document.body.innerText);
 
-    const numbers = await page.$$eval("td", tds =>
-      tds.map(td => parseFloat(td.innerText)).filter(n => !isNaN(n))
-    );
+    // extract all numbers
+    const numbers = text
+      .split(/\s+/)
+      .map(x => parseInt(x))
+      .filter(x => !isNaN(x));
 
     const pageSum = numbers.reduce((a, b) => a + b, 0);
 
-    console.log(`Seed ${seed} sum =`, pageSum);
+    console.log("Seed", seed, pageSum);
 
-    totalSum += pageSum;
+    total += pageSum;
   }
 
-  console.log("FINAL_SUM =", totalSum);
+  console.log("FINAL_SUM=" + total);
 
   await browser.close();
 })();
