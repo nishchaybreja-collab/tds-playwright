@@ -1,35 +1,32 @@
 const { chromium } = require("playwright");
 
-async function run() {
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
 
-    const seeds = [
-        17,18,19,20,21,22,23,24,25,26
-    ];
+  let totalSum = 0;
 
-    let total = 0;
+  for (let seed = 17; seed <= 26; seed++) {
+    const url = `https://exam.sanand.workers.dev/tds-2026-01-ga3hq-cdp-runtime-diagnostics?seed=${seed}`;
+    
+    console.log("Opening:", url);
 
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
+    await page.goto(url);
 
-    for (let s of seeds) {
+    await page.waitForSelector("table");
 
-        const url = `https://exam.sanand.workers.dev/seed/${s}`;
+    const numbers = await page.$$eval("td", tds =>
+      tds.map(td => parseFloat(td.innerText)).filter(n => !isNaN(n))
+    );
 
-        await page.goto(url);
+    const pageSum = numbers.reduce((a, b) => a + b, 0);
 
-        const numbers = await page.$$eval("td", tds =>
-            tds.map(td => parseFloat(td.innerText))
-               .filter(x => !isNaN(x))
-        );
+    console.log(`Seed ${seed} sum =`, pageSum);
 
-        const sum = numbers.reduce((a,b)=>a+b,0);
+    totalSum += pageSum;
+  }
 
-        total += sum;
-    }
+  console.log("FINAL_SUM =", totalSum);
 
-    console.log("FINAL TOTAL =", total);
-
-    await browser.close();
-}
-
-run();
+  await browser.close();
+})();
